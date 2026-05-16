@@ -22,9 +22,9 @@
 .gradle/
 
 # 保留 .idea 中需要共享的配置（可选，取消注释表示保留）
- !.idea/codeStyles/
- !.idea/misc.xml
- !.idea/modules.xml
+# !.idea/codeStyles/
+# !.idea/misc.xml
+# !.idea/modules.xml
 
 # ====================
 # 4. 本地环境配置

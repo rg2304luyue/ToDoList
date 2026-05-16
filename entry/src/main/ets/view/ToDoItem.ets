@@ -13,41 +13,81 @@
  * limitations under the License.
  */
 
-import CommonConstants from '../common/constant/CommonConstant';
+import { TaskItem } from '../viewmodel/DataModel';
 
 @Component
 export default struct ToDoItem {
-  public content?: string;
-  @State isComplete: boolean = false;
+  @Prop task: TaskItem;
+  onToggle?: () => void;
 
-  @Builder labelIcon(icon: Resource) {
-    Image(icon)
-      .objectFit(ImageFit.Contain)
-      .width($r('app.float.checkbox_width'))
-      .height($r('app.float.checkbox_width'))
-      .margin($r('app.float.checkbox_margin'))
+  /**
+   * 校验当前事项是否已逾期
+   */
+  isOverdue(): boolean {
+    if (this.task.isComplete || !this.task.dueDate) return false;
+    let today = new Date();
+    let due = new Date(this.task.dueDate);
+    today.setHours(0, 0, 0, 0);
+    due.setHours(0, 0, 0, 0);
+    return today.getTime() > due.getTime();
   }
 
   build() {
     Row() {
-      if (this.isComplete) {
-        this.labelIcon($r('app.media.ic_ok'));
-      } else {
-        this.labelIcon($r('app.media.ic_default'));
-      }
+      // 左侧交互选择圆圈
+      Image(this.task.isComplete ? $r('app.media.ic_ok') : $r('app.media.ic_default'))
+        .objectFit(ImageFit.Contain)
+        .width(26)
+        .height(26)
+        .margin({ right: 16 })
 
-      Text(this.content)
-        .fontSize($r('app.float.item_font_size'))
-        .fontWeight(CommonConstants.FONT_WEIGHT)
-        .opacity(this.isComplete ? CommonConstants.OPACITY_COMPLETED : CommonConstants.OPACITY_DEFAULT)
-        .decoration({ type: this.isComplete ? TextDecorationType.LineThrough : TextDecorationType.None })
+      // 中间文本多模态排版
+      Column() {
+        Text(this.task.content)
+          .fontSize(17)
+          .fontWeight(FontWeight.Medium)
+          .fontColor(this.task.isComplete ? '#A0A0A0' : '#2C2C2C')
+          .decoration({ type: this.task.isComplete ? TextDecorationType.LineThrough : TextDecorationType.None })
+
+        // 功能三：已完成事项标识确切时间
+        if (this.task.isComplete && this.task.completionTime) {
+          Text(`✓ 完成于: ${this.task.completionTime}`)
+            .fontSize(12)
+            .fontColor('#22C55E')
+            .margin({ top: 6 })
+        }
+
+        // 未完成时显示截止时间
+        if (!this.task.isComplete && this.task.dueDate) {
+          Text(`⌛ 截止日期: ${this.task.dueDate}`)
+            .fontSize(12)
+            .fontColor(this.isOverdue() ? '#EF4444' : '#767676')
+            .margin({ top: 6 })
+        }
+      }
+      .alignItems(HorizontalAlign.Start)
+      .layoutWeight(1)
+
+      // 功能四：到期状态标签化提醒
+      if (this.isOverdue()) {
+        Text('已到期')
+          .fontSize(11)
+          .fontColor('#FFFFFF')
+          .backgroundColor('#EF4444')
+          .padding({ left: 6, right: 6, top: 3, bottom: 3 })
+          .borderRadius(6)
+          .fontWeight(FontWeight.Bold)
+      }
     }
-    .borderRadius(CommonConstants.BORDER_RADIUS)
-    .backgroundColor($r('app.color.start_window_background'))
-    .width(CommonConstants.LIST_DEFAULT_WIDTH)
-    .height($r('app.float.list_item_height'))
+    .width('100%')
+    .padding(16)
+    .backgroundColor('#FFFFFF')
+    .borderRadius(14)
+    .shadow({ radius: 5, color: '#06000000', offsetX: 0, offsetY: 2 })
     .onClick(() => {
-      this.isComplete = !this.isComplete;
+      if (this.onToggle) {
+        this.onToggle();
+      }
     })
   }
 }
